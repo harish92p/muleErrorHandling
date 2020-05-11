@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:templateforhertzexperience-api="http://www.mulesoft.org/schema/mule/templateforhertzexperience-api" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:dev-rel-quick-start-products-api="http://www.mulesoft.org/schema/mule/dev-rel-quick-start-products-api" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/dev-rel-quick-start-products-api http://www.mulesoft.org/schema/mule/dev-rel-quick-start-products-api/current/mule-dev-rel-quick-start-products-api.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/templateforhertzexperience-api http://www.mulesoft.org/schema/mule/templateforhertzexperience-api/current/mule-templateforhertzexperience-api.xsd">
+	
+
+	<error-handler name="apiErrorStrategy" doc:id="1f9f18c1-b148-4946-962b-95fb14dbf672" >
+		
+		
+		<on-error-continue enableNotifications="true" logException="true" doc:name="Validation Catch Exception Strategy" doc:id="911adba1-0ed9-4c7a-a5e9-83cc0263e8c9" type="EXPRESSION" when='#[error.cause.class contains "org.mule.extension.validation.api.ValidationException"]'>
+			<set-variable value="412" doc:name="errorCode" doc:id="7712f30f-da5a-4a6a-b8d2-23c0f066fc6a" variableName="errorCode" />
+			<flow-ref doc:name="build-error-response-SubFlow" doc:id="c19494ff-3be2-4f06-a2eb-74ce441a5484" name="build-error-response-SubFlow"/>
+		</on-error-continue>
+		
+		
+		<on-error-continue enableNotifications="true" logException="true" doc:name="Json Validation Error Handler" doc:id="3d09dce7-136f-421b-91ad-77624ca50f42"  when='#[error.cause.class contains "org.mule.module.json.validation.*"]'>
+			<set-variable value="412" doc:name="errorCode" doc:id="a4233b9b-314c-49a5-8029-a8eed239895d" variableName="errorCode" />
+			<flow-ref doc:name="build-error-response-SubFlow" doc:id="af577842-4c64-4620-9f87-fc7ecc3faccd" name="build-error-response-SubFlow"/>
+		</on-error-continue>
+		
+		<on-error-continue enableNotifications="true" logException="true" doc:name="Http RESTCall Exception" doc:id="66f98234-2f3a-4e72-bb99-5b19260fd4f5" when='#[error.cause.class contains "org.mule.extension.http.api.request.validator.ResponseValidatorTypedException"]'>
+			<set-variable value="412" doc:name="errorCode" doc:id="f9308acd-464a-45ad-91c7-784f9a85cb43" variableName="errorCode" />
+			<flow-ref doc:name="build-error-response-SubFlow" doc:id="f66e0c37-1321-4246-a0a1-b6f5c45b91aa" name="build-error-response-SubFlow"/>
+		</on-error-continue>
+		<!-- start of typical REST exceptions -->
+	
+		<on-error-continue enableNotifications="true" logException="true" doc:name="APIKIT:METHOD_NOT_ALLOWED" doc:id="d1a663a7-df25-43a3-a1a5-93f4be0ea33e" type="EXPRESSION" when='#[error.cause.class contains "org.mule.module.apikit.api.exception.MethodNotAllowedException"]'>
+			<set-variable value="405" doc:name="errorCode" doc:id="f8adb73d-8387-4570-951d-2a084dc689a5" variableName="errorCode" />
+			<flow-ref doc:name="build-error-response-SubFlow" doc:id="58f201fa-e93c-486e-ad9d-081c9bbddbfb" name="build-error-response-SubFlow" />
+		</on-error-continue>
+		
+		<on-error-continue enableNotifications="true" logException="true" doc:name="APIKIT:NOT_ACCEPTABLE" doc:id="d43bb9c4-d336-49c4-9dbb-ebc1aaeec988" when='#[error.cause.class contains "org.mule.module.apikit.api.exception.NotAcceptableException"]'>
+			<set-variable value="406" doc:name="errorCode" doc:id="cbf9c4cf-aaaa-42ed-a187-309188f5cd73" variableName="errorCode" />
+			<flow-ref doc:name="build-error-response-SubFlow" doc:id="b52b3c58-140e-4f7b-98c0-ba181ebce93e" name="build-error-response-SubFlow" />
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="APIKIT:INVALID_HEADER" doc:id="39ad05b9-9149-4df9-a773-2b8d6da2efb7" type="EXPRESSION" when='#[error.cause.class contains "org.mule.module.apikit.api.exception.InvalidHeaderException"]'>
+			<set-variable value="417" doc:name="errorCode" doc:id="f9d7bba3-f439-4ce0-a1ed-b8a3ff3a2f5b" variableName="errorCode" />
+			<flow-ref doc:name="build-error-response-SubFlow" doc:id="4eeec24b-1523-4b10-aaac-d538d756c08c" name="build-error-response-SubFlow" />
+		</on-error-continue>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="APIKIT:UNSUPPORTED_MEDIA_TYPE" doc:id="d5a9bedf-2b55-413f-8a45-d0d5e583bfb8" type="EXPRESSION" when='#[error.cause.class contains "org.mule.module.apikit.api.exception.UnsupportedMediaTypeException"]'>
+			<set-variable value="415" doc:name="errorCode" doc:id="01b999e9-6978-477e-96ed-1dc408a844c0" variableName="errorCode" />
+			<flow-ref doc:name="build-error-response-SubFlow" doc:id="982b962b-5d47-4e36-925f-a53780e3ef84" name="build-error-response-SubFlow" />
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="APIKIT:RUNTIME_EXCEPTION" doc:id="aa629260-725e-4737-9227-0bda399dec23" type="EXPRESSION" when='#[error.cause.class contains "org.mule.module.apikit.api.exception.ApikitRuntimeException"]'>
+			<set-variable value="501" doc:name="errorCode" doc:id="493ac96f-c73c-46de-a5f7-037838f849f1" variableName="errorCode" />
+			<flow-ref doc:name="build-error-response-SubFlow" doc:id="eff4e96f-987e-4b2c-ab6d-d7dcd7fc9a87" name="build-error-response-SubFlow" />
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="APIKIT:BAD_REQUEST" doc:id="443648b6-a4ea-4c21-a6af-ded97d8bd54e" type="EXPRESSION" when='#[error.cause.class contains "org.mule.module.apikit.api.exception.InvalidQueryParameterException"]'>
+			<set-variable value="400" doc:name="errorCode" doc:id="a93a5b93-f465-489c-86e4-a259e3c11817" variableName="errorCode" />
+			<flow-ref doc:name="build-error-response-SubFlow" doc:id="944cddcc-0c93-4b52-b18a-a086f0201fb1" name="build-error-response-SubFlow" />
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="APIKIT:NOT_FOUND" doc:id="b6b31b5c-44da-49a8-8cac-76f9d0c623e8" type="EXPRESSION" when='#[error.cause.class contains "org.mule.module.apikit.api.exception.NotFoundException"]'>
+			<set-variable value="404" doc:name="errorCode" doc:id="ee6d91f4-7ed7-4458-97b2-71c37af6c076" variableName="errorCode" />
+			<flow-ref doc:name="build-error-response-SubFlow" doc:id="f6975834-8dd5-4167-9b9e-481140e3f41b" name="build-error-response-SubFlow" />
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="APIKIT:NOT_IMPLEMENTED" doc:id="5b15184b-4269-4c1a-a183-5b17cad6a3af" type="EXPRESSION" when='#[error.errorType.identifier contains "NOT_IMPLEMENTED"]'>
+			<set-variable value="501" doc:name="errorCode" doc:id="7c641e22-f4cd-4978-a21d-dd30c50b9ee9" variableName="errorCode" />
+			<flow-ref doc:name="build-error-response-SubFlow" doc:id="086dbeca-d059-41ce-979d-81876bfcf2e4" name="build-error-response-SubFlow" />
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="APIKIT:ILLEGAL_ARGUMENT_EXCEPTION" doc:id="db41f8d5-e749-459d-82f6-66b1351dba33" type="EXPRESSION" when='#[error.cause.class contains "java.lang.IllegalArgumentException"]'>
+			<set-variable value="500" doc:name="httpStatus" doc:id="726a6f65-3bee-4082-8f39-f900303ede5f" variableName="httpStatus" />
+			<flow-ref doc:name="build-error-response-SubFlow" doc:id="94a84ffb-c020-4669-999e-35ba7886bb2a" name="build-error-response-SubFlow" />
+		</on-error-continue>
+		<!-- end of typical REST exceptions -->
+		
+		<!-- no data to transform, typically nothing in response -->
+		<on-error-continue enableNotifications="true" logException="true" doc:name="NO_DATA_FOUND" doc:id="242732ab-e331-4390-8669-a29e39ccf775" type="EXPRESSION" when='#[error.cause.class contains "com.mulesoft.weave.*"]'>
+			<set-variable value="204" doc:name="errorCode" doc:id="bea6f754-b965-4b34-b4b7-449fc4c3d2d4" variableName="errorCode" />
+			<set-variable value="#['Payload empty - No data retrieved']" doc:name="commonError" doc:id="30ff8434-fb85-4f51-a950-6f3df2421d4b" variableName="commonError" />
+			<flow-ref doc:name="build-error-response-SubFlow" doc:id="6f227bd0-d5a0-43f7-ab8c-fb1cb590a96d" name="build-error-response-SubFlow" />
+		</on-error-continue>
+		
+		<on-error-continue enableNotifications="true" logException="true" doc:name="INVALID_TRANSFORMATION" doc:id="09d3503e-cd4a-4a7f-a156-674d88ba070c" type="EXPRESSION" when='#[error.cause.class contains "org.mule.runtime.core.api.expression.ExpressionRuntimeException"]'>
+			<set-variable value="500" doc:name="errorCode" doc:id="310b40b4-0a0f-4d36-9d17-831d549ec2ec" variableName="errorCode" />
+			<set-variable value="#['Payload empty - No data retrieved']" doc:name="commonError" doc:id="7a58222c-6da6-4e8c-9dc7-f5885044b1fb" variableName="commonError" />
+			<flow-ref doc:name="build-error-response-SubFlow" doc:id="4522f5aa-da44-4876-8135-1a59c1a5fc0b" name="build-error-response-SubFlow" />
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="JAVA_LANG_NULLPOINTER" doc:id="63be24d3-91d8-4d10-b2e4-889c8b5bd022" type="EXPRESSION" when='#[error.cause.class contains "java.lang.NullPointerException"]'>
+			<set-variable value="500" doc:name="errorCode" doc:id="8c15fafc-6eb2-4198-85f6-4d850f925bf6" variableName="errorCode" />
+			<flow-ref doc:name="build-error-response-SubFlow" doc:id="5d5fb6fd-ac39-4469-a27a-988d2a8e61ab" name="build-error-response-SubFlow" />
+		</on-error-continue>		
+		<on-error-continue enableNotifications="true" logException="true" doc:name="Multiple Multiple Validation Error" doc:id="ec2c5f4f-91e7-4f50-8691-af602cb90f42" type="EXPRESSION" when='#[error.cause.class contains "org.mule.extension.validation.api.MultipleValidationException"]'>
+			<set-variable value="500" doc:name="errorCode" doc:id="4144d8bb-2c70-438e-a94e-659ae6cb9de8" variableName="errorCode" />
+			<flow-ref doc:name="build-error-response-SubFlow" doc:id="4cf37c90-3571-42fd-8703-47dccece7b8d" name="build-error-response-SubFlow" />
+		</on-error-continue>
+		<!--All Other Exception -->
+		<on-error-continue enableNotifications="true" logException="true" doc:name="ALL_OTHER" doc:id="669cc60a-2b4f-451a-90a6-f89f283b0835" type="ANY">
+			<set-variable value="400" doc:name="errorCode" doc:id="4683f277-5d43-438f-85db-299af7da6ec1" variableName="errorCode" />
+			<flow-ref doc:name="build-error-response-SubFlow" doc:id="fe7ef69b-de6c-4b20-801a-7c890047926a" name="build-error-response-SubFlow" />
+		</on-error-continue>
+		
+	</error-handler>
+
+</mule>

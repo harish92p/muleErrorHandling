@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="helloworldFlow" doc:id="4e9b60b8-ea9e-411e-a418-f4312fa464c7" >
+		<set-variable value="#[correlationId]" doc:name="Set UUID"
+			doc:id="d9ea825d-1c8c-4587-ae5e-4584ee1eee89" variableName="uuid" />
+		<set-variable value="createData" doc:name="svcName"
+			doc:id="3d7dd356-c3c6-47f7-bd2b-29103b7bee8c" variableName="svcName" />
+		<set-payload value="Hello World!!" doc:name="Set Payload" doc:id="121e9ebe-1fff-49e2-8ef1-a8a8415e510d" />
+		<ee:transform doc:name="Transform Message"
+			doc:id="7be8fb78-61cb-4e86-bacb-895933206301">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "message": {
+    "messageType": vars.svcName,
+    "data": {
+      "dataResponse":  payload
+		}
+}
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/java
+---
+attributes.statusCode]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="462912cc-5822-4f42-a2d3-a83433ec5966" message="#[payload]"/>
+	</flow>
+</mule>

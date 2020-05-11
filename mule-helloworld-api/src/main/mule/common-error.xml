@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:audit-logger="http://www.mulesoft.org/schema/mule/audit-logger"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/audit-logger http://www.mulesoft.org/schema/mule/audit-logger/current/mule-audit-logger.xsd">
+		<import doc:name="Import" doc:id="b8ab2e7c-66ff-4a75-bdf9-7328a0d07de1"
+		file="api-common-error.xml" />
+	<sub-flow name="build-error-response-SubFlow" doc:id="2614d55f-e690-443e-bc64-7d6f4ac0d867" >
+			<set-variable value="#[if (error.cause.errorMessage.attributes.statusCode != null) error.cause.errorMessage.attributes.statusCode else vars.errorCode]" doc:name="httpStatus" doc:id="d194843e-8f6c-4f06-b138-f72968215784" variableName="httpStatus"/>
+		<set-variable value='#[error.errorType.namespace ++ ":" ++ error.errorType.identifier]' doc:name="errorType" doc:id="0c09ca39-79f4-418f-9ae4-9a56c826b1ed" variableName="errorType"/>
+			<set-variable value='#[error.description]' doc:name="errorDesc" doc:id="f819bb7a-6a32-4e5c-85f6-08fc8762706b" variableName="errorDesc"/>
+		<ee:transform doc:name="responsePayload" doc:id="05b4e58f-08ad-47c1-88c7-f87ee29e9f19">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+
+{ 
+message: { 
+messageType: vars.svcName,
+data: {
+	error: {
+	"code": vars.httpStatus,
+	"type": vars.errorType,
+	"description": if(error.errorMessage.payload.errors != null) error.errorMessage.payload.errors else  vars.errorDesc as String ++ ":" ++ (if (vars.commonError != null) vars.commonError as String else ""),
+	"uuid": vars.uuid default null
+}
+}
+}
+} 
+]]></ee:set-payload>
+				<ee:set-attributes ><![CDATA[%dw 2.0
+output application/json
+---
+statusCode: vars.httpStatus]]></ee:set-attributes>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="3d2280e9-3112-48bd-bba4-c249526e74cd" message="#[payload]"/>
+	<try doc:name="Try" doc:id="69e77353-e0c6-4b84-914c-3098838ecc11" >
+			<async doc:name="errorLoggingAsync" doc:id="77c89efb-39e4-4185-8ccc-66f8e242c317">
+			<ee:transform doc:name="LogErrorMessage" doc:id="c66ab5b8-d42e-4f13-bcb4-f4dfe1a7adf4">
+				<ee:variables>
+					<ee:set-variable variableName="additionalKeys"><![CDATA[%dw 2.0
+import * from dw::core::Binaries
+output application/java
+---
+{
+	"rootCauseMessage": if(error.cause.errorMessage.attributes.reasonPhrase != null) error.cause.errorMessage.attributes.reasonPhrase else error.message default null, //Unique messageId ID eg: customer email address
+	"errorCode": if(error.cause.errorMessage.attributes.statusCode !=null) error.cause.errorMessage.attributes.statusCode else vars.errorCode default null,
+	"errorType": vars.errorType, //Unique messageId ID eg: customer email address
+	"description": vars.errorDesc,
+	"errorClass": error.cause.class
+}]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="9926f52f-916d-4f39-b403-25ae9e41a7f5" message="#[payload]" />
+			
+		
+</async>
+		</try>
+</sub-flow>
+	</mule>
